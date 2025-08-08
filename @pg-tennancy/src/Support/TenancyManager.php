@@ -61,6 +61,8 @@ class TenancyManager
     {
         $this->currentTenant = $tenant;
         $this->configureTenantConnection($tenant);
+        Config::set('database.default', $this->tenantConnectionName());
+        DB::setDefaultConnection($this->tenantConnectionName());
     }
 
     /**
@@ -75,6 +77,9 @@ class TenancyManager
     {
         $this->currentTenant = null;
         DB::purge($this->tenantConnectionName());
+        $baseConnection = Config::get('tenancy.base_connection', 'pgsql');
+        Config::set('database.default', $baseConnection);
+        DB::setDefaultConnection($baseConnection);
     }
 
     /**
@@ -114,7 +119,7 @@ class TenancyManager
         $tenantConfig = $config;
         $tenantConfig['username'] = $username;
         $tenantConfig['password'] = $password;
-        $tenantConfig['options'] = ($tenantConfig['options'] ?? '') . ' -c search_path=' . $schema . ',public';
+        $tenantConfig['search_path'] = [$schema, 'public'];
 
         Config::set('database.connections.'.$this->tenantConnectionName(), $tenantConfig);
         DB::purge($this->tenantConnectionName());

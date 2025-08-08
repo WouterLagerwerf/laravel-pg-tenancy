@@ -5,6 +5,7 @@ namespace PgTenancy\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 /**
  * Team model representing a tenant team in the application.
@@ -74,9 +75,12 @@ class Team extends Model
      */
     public static function createForUser(string $name, object $user, array $attributes = []): self
     {
+        $slugBase = $attributes['slug'] ?? Str::slug($name);
+        $slug = static::generateUniqueSlug($slugBase);
+
         $team = new self([
             'name' => $name,
-            'slug' => $attributes['slug'] ?? \Illuminate\Support\Str::slug($name),
+            'slug' => $slug,
             'owner_id' => $user->getKey(),
         ]);
         $team->save();
@@ -88,5 +92,25 @@ class Team extends Model
         }
 
         return $team;
+    }
+
+    /**
+     * Generate a unique slug by appending an incrementing suffix when needed.
+     */
+    protected static function generateUniqueSlug(string $base): string
+    {
+        $candidate = $base !== '' ? $base : 'team';
+        if (! static::where('slug', $candidate)->exists()) {
+            return $candidate;
+        }
+        $counter = 2;
+        while (true) {
+            $suffix = '-' . $counter;
+            $candidateWithSuffix = $candidate . $suffix;
+            if (! static::where('slug', $candidateWithSuffix)->exists()) {
+                return $candidateWithSuffix;
+            }
+            $counter++;
+        }
     }
 }

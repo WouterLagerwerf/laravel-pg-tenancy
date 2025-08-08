@@ -49,8 +49,15 @@ class PostgresSchemaManager
      */
     public function createForTenant(Tenant $tenant, ?string $plainPassword = null): string
     {
-        $schema = $tenant->schema ?: $this->generateSchemaName($tenant->slug);
-        $username = $tenant->db_username ?: $this->generateUserName($tenant->slug);
+        // Prefer deterministic names based on team id when available to guarantee uniqueness
+        $baseSchema = $tenant->schema
+            ?: ($tenant->team_id ? 't_team_' . $tenant->team_id : $this->generateSchemaName($tenant->slug));
+        $baseUsername = $tenant->db_username
+            ?: ($tenant->team_id ? 'u_team_' . $tenant->team_id : $this->generateUserName($tenant->slug));
+
+        // Ensure uniqueness across existing tenants by appending a short suffix when needed
+        $schema = $this->ensureUnique($baseSchema, fn (string $candidate) => !\PgTenancy\Models\Tenant::where('schema', $candidate)->exists());
+        $username = $this->ensureUnique($baseUsername, fn (string $candidate) => !\PgTenancy\Models\Tenant::where('db_username', $candidate)->exists());
         $password = $plainPassword ?: Str::random(32);
 
         $tenant->schema = $schema;
@@ -120,5 +127,25 @@ class PostgresSchemaManager
     {
         $base = 'u_'.preg_replace('/[^a-z0-9_]+/i', '_', strtolower($slug));
         return substr($base, 0, 60);
+    }
+
+    /**
+     * Append numeric suffix until the provided predicate returns true.
+     */
+    protected function ensureUnique(string $base, callable $isAvailable): string
+    {
+        $candidate = substr($base, 0, 60);
+        if ($isAvailable($candidate)) {
+            return $candidate;
+        }
+        $counter = 2;
+        while (true) {
+            $suffix = '_' . $counter;
+            $candidate = substr($base, 0, 60 - strlen($suffix)) . $suffix;
+            if ($isAvailable($candidate)) {
+                return $candidate;
+            }
+            $counter++;
+        }
     }
 }

@@ -40,7 +40,7 @@ protected $middlewareGroups = [
 
 ## Schema Isolation
 
-Each tenant gets its own PostgreSQL schema and role. Connection uses `options = '-c search_path={schema},public'` to be PgBouncer-friendly.
+Each tenant gets its own PostgreSQL schema and role. The package sets the Postgres `search_path` to `{schema},public` on a per-request tenant connection.
 
 ## Commands
 
@@ -60,7 +60,7 @@ MIT
 
 ## Programmatic Tenant Creation (Sign-up)
 
-Preferred flow: create a User, then create a Team for that user. The package will provision the tenant schema via the Team observer.
+Preferred flow: create a User, then create a Team for that user. The package provisions the tenant schema via the Team observer and automatically runs tenant migrations.
 
 ```php
 use PgTenancy\Models\Team;
@@ -69,5 +69,61 @@ use PgTenancy\Models\Team;
 $team = Team::createForUser('Acme Inc', $user);
 // A tenant record is created and schema is provisioned automatically (observer)
 ```
+
+## Add tenancy to your registration flow (Livewire Volt example)
+
+1) Ensure team-based tenancy mode:
+
+```php
+// config/tenancy.php
+return [
+    'mode' => 'team',
+];
+```
+
+2) Register route middleware so tenancy resolves after auth:
+
+```php
+// bootstrap/app.php
+->withMiddleware(function (\Illuminate\Foundation\Configuration\Middleware $middleware) {
+    $middleware->alias([
+        'tenant' => \PgTenancy\Http\Middleware\IdentifyTenant::class,
+    ]);
+})
+
+// routes/web.php
+Route::view('dashboard', 'dashboard')->middleware(['auth', 'tenant', 'verified']);
+```
+
+3) Extend your register component to accept a team name and create the team after user creation:
+
+```php
+// resources/views/livewire/auth/register.blade.php (excerpt)
+use PgTenancy\\Models\\Team;
+
+public string $team_name = '';
+
+public function register(): void
+{
+    // ... validate + create $user + Auth::login($user)
+    $teamName = trim($this->team_name) !== '' ? $this->team_name : ($user->name . "'s Team");
+    Team::createForUser($teamName, $user);
+    // redirect to dashboard
+}
+
+// Add an input to the form
+<flux:input wire:model="team_name" :label="__('Team name')" type="text" autocomplete="organization" />
+```
+
+4) Show current tenant schema (optional):
+
+```php
+// resources/views/dashboard.blade.php (excerpt)
+$schemaName = DB::selectOne('select current_schema() as schema')->schema ?? null;
+```
+
+Notes:
+- On `TenantCreated`, the package runs tenant migrations in `database/migrations/tenant` on the tenant connection.
+- Team slugs and tenant schemas are made unique automatically (even for duplicate team names).
 
 
