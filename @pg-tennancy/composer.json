@@ -1,0 +1,46 @@
+{
+  "name": "pg-tennancy/laravel-pg-tenancy",
+  "description": "Laravel multi-tenancy for PostgreSQL schema isolation with connection pooling (subdomain, path, team modes)",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "pg-tennancy",
+      "email": "dev@example.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.2",
+    "illuminate/support": "^10.0|^11.0|^12.0",
+    "illuminate/database": "^10.0|^11.0|^12.0",
+    "illuminate/console": "^10.0|^11.0|^12.0",
+    "illuminate/config": "^10.0|^11.0|^12.0",
+    "illuminate/http": "^10.0|^11.0|^12.0",
+    "illuminate/events": "^10.0|^11.0|^12.0"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^8.0|^9.0|^10.0",
+    "phpunit/phpunit": "^10.0|^11.0",
+    "mockery/mockery": "^1.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "PgTenancy\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "PgTenancy\\Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "PgTenancy\\PgTenancyServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
+

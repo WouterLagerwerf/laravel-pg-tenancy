@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit colors="true" bootstrap="vendor/autoload.php">
+    <testsuites>
+        <testsuite name="Package Test Suite">
+            <directory suffix="Test.php">tests</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_KEY" value="base64:Z0FjV29yZExhcmF2ZWxBdXRoS2V5YmFzZTY0"/>
+        <env name="DB_CONNECTION" value="testing"/>
+    </php>
+</phpunit>
+
