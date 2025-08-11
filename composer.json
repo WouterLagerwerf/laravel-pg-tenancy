@@ -6,7 +6,7 @@
   "authors": [
     {
       "name": "pg-tennancy",
-      "email": "dev@example.com"
+      "email": "wouter@wl-solutions.nl"
     }
   ],
   "require": {
@@ -41,6 +41,7 @@
     }
   },
   "minimum-stability": "stable",
-  "prefer-stable": true
+  "keywords": ["laravel", "multi-tenancy", "postgresql", "schema", "isolation", "connection pooling"],
+  "homepage": "https://github.com/WouterLagerwerf/laravel-pg-tenancy"
 }
 
