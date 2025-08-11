@@ -1,5 +1,5 @@
 {
-  "name": "pg-tennancy/laravel-pg-tenancy",
+  "name": "pg-tenancy/laravel-pg-tenancy",
   "description": "Laravel multi-tenancy for PostgreSQL schema isolation with connection pooling (subdomain, path, team modes)",
   "type": "library",
   "license": "MIT",
